@@ -9,10 +9,10 @@ theme:
     text: Inter
     code: Roboto Mono
     heading: Inter Tight
-  palette: 
+  palette:
     - scheme: default
       toggle:
-        icon: material/brightness-7 
+        icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
       media: "(prefers-color-scheme: dark)"
@@ -48,12 +48,12 @@ extra:
     - name: 繁體中文
       link: /zh-tw/
       lang: zh-TW
-copyright: "&copy; 2024 AWeirdDev" 
+copyright: "&copy; 2024 AWeirdDev"
 markdown_extensions:
   - attr_list
   - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: material.extensions.emoji.twemoji
+      emoji_generator: material.extensions.emoji.to_svg
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.superfences
