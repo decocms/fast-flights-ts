@@ -1,28 +1,9 @@
-# `dev`
-You're viewing the dev branch.
-
-```python
-import fast_flights
-```
-
-**Integrations**:
-Bright data:
-
-```python
-from fast_flights import get_flights
-from fast_flights.integrations import BrightData
-
-get_flights(..., integration=BrightData())
-```
-
-***
-
-<br /><br />
 <div align="center">
 
 # ✈️ fast-flights (v3.0rc1)
 
-The fast and strongly-typed Google Flights scraper (API) implemented in Python. Based on Base64-encoded Protobuf string.
+The fast and strongly-typed Google Flights scraper (API) implemented in Python.
+Based on Base64-encoded Protobuf string.
 
 [**Documentation (v2)**](https://aweirddev.github.io/flights) • [Issues](https://github.com/AWeirdDev/flights/issues) • [PyPi](https://pypi.org/project/fast-flights)
 
@@ -57,6 +38,18 @@ query = create_query(
 res = get_flights(query)
 ```
 
+## Integrations
+If you'd like, you can use integrations.
+
+Bright data:
+
+```python
+from fast_flights import get_flights
+from fast_flights.integrations import BrightData
+
+get_flights(..., integration=BrightData())
+```
+
 ## What's new
 - `v2.0` – New (much more succinct) API, fallback support for Playwright serverless functions, and [documentation](https://aweirddev.github.io/flights)!
 - `v2.2` - Now supports **local playwright** for sending requests.
@@ -66,7 +59,8 @@ res = get_flights(query)
 Contributing is welcomed! A few notes though:
 1. please no ai slop. i am not reading all that.
 2. one change at a time. what your title says is what you've changed.
-3. really, i cant finish reading all of them, i have other projects and life to do. really sorry
+3. no new dependencies unless it's related to the core parsing.
+4. really, i cant finish reading all of them, i have other projects and life to do. really sorry
 
 ***
 
