@@ -13,6 +13,8 @@ except ModuleNotFoundError:
 
 
 class Integration(ABC):
+    """Represents an integration."""
+
     def fetch_html(self, q: Query | str, /) -> str:
         """Fetch the flights page HTML from a query.
 

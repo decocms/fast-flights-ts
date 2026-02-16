@@ -20,11 +20,11 @@ get_flights(..., integration=BrightData())
 <br /><br />
 <div align="center">
 
-# ✈️ fast-flights
+# ✈️ fast-flights (v3.0rc1)
 
 The fast and strongly-typed Google Flights scraper (API) implemented in Python. Based on Base64-encoded Protobuf string.
 
-[**Documentation**](https://aweirddev.github.io/flights) • [Issues](https://github.com/AWeirdDev/flights/issues) • [PyPi](https://pypi.org/project/fast-flights)
+[**Documentation (v2)**](https://aweirddev.github.io/flights) • [Issues](https://github.com/AWeirdDev/flights/issues) • [PyPi](https://pypi.org/project/fast-flights)
 
 ```haskell
 $ pip install fast-flights
@@ -32,68 +32,41 @@ $ pip install fast-flights
 
 </div>
 
-## Basics
-**TL;DR**: To use `fast-flights`, you'll first create a filter (for `?tfs=`) to perform a request.
-Then, add `flight_data`, `trip`, `seat`, `passengers` to use the API directly.
-
+## At a glance
 ```python
-from fast_flights import FlightData, Passengers, Result, get_flights
-
-result: Result = get_flights(
-    flight_data=[
-        FlightData(date="2025-01-01", from_airport="TPE", to_airport="MYJ")
-    ],
-    trip="one-way",
-    seat="economy",
-    passengers=Passengers(adults=2, children=1, infants_in_seat=0, infants_on_lap=0),
-    fetch_mode="fallback",
+from fast_flights import (
+    FlightQuery,
+    Passengers, 
+    create_query, 
+    get_flights
 )
 
-print(result)
-
-# The price is currently... low/typical/high
-print("The price is currently", result.current_price)
-```
-
-**Properties & usage for `Result`**:
-
-```python
-result.current_price
-
-# Get the first flight
-flight = result.flights[0]
-
-flight.is_best
-flight.name
-flight.departure
-flight.arrival
-flight.arrival_time_ahead
-flight.duration
-flight.stops
-flight.delay?  # may not be present
-flight.price
-```
-
-**Useless enums**: Additionally, you can use the `Airport` enum to search for airports in code (as you type)! See `_generated_enum.py` in source.
-
-```python
-Airport.TAIPEI
-              ╭─────────────────────────────────╮
-              │ TAIPEI_SONGSHAN_AIRPORT         │
-              │ TAPACHULA_INTERNATIONAL_AIRPORT │
-              │ TAMPA_INTERNATIONAL_AIRPORT     │
-              ╰─────────────────────────────────╯
+query = create_query(
+    flights=[
+        FlightQuery(
+            date="YYYY-MM-DD",   # change the date
+            from_airport="MYJ",  # three-letter name
+            to_airport="TPE",    # three-letter name
+        ),
+    ],
+    seat="economy",  # business/economy/first/premium-economy
+    trip="one-way",  # multi-city/one-way/round-trip
+    passengers=Passengers(adults=1),
+    language="zh-TW",
+)
+res = get_flights(query)
 ```
 
 ## What's new
 - `v2.0` – New (much more succinct) API, fallback support for Playwright serverless functions, and [documentation](https://aweirddev.github.io/flights)!
 - `v2.2` - Now supports **local playwright** for sending requests.
-
-## Cookies & consent
-The EU region is a bit tricky to solve for now, but the fallback support should be able to handle it.
+- `v3.0rc0` - Uses Javascript data instead.
 
 ## Contributing
-Contributing is welcomed! I probably won't work on this project unless there's a need for a major update, but boy howdy do I love pull requests.
+Contributing is welcomed! A few notes though:
+1. please no ai slop. i am not reading all that.
+2. one change at a time. what your title says is what you've changed.
+3. really, i cant finish reading all of them, i have other projects and life to do. really sorry
 
 ***
 
@@ -193,6 +166,6 @@ I have no idea what I wrote but... it worked! And here it is, `fast-flights`.
 
 <div align="center">
 
-(c) 2024-2025 AWeirdDev, and other awesome people
+(c) 2024-2026 AWeirdDev, and all the awesome people
 
 </div>

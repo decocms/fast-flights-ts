@@ -2,6 +2,7 @@
 # pr: #64
 
 from primp import Client
+from typing_extensions import Final, override
 
 from ..fetcher import URL
 from ..querying import Query
@@ -12,7 +13,11 @@ DEFAULT_DATA_SERP_ZONE = "serp_api1"
 
 
 class BrightData(Integration):
-    __slots__ = ("api_url", "zone")
+    __slots__: Final = ("api_url", "zone")
+
+    api_url: str
+    zone: str
+    client: Client
 
     def __init__(
         self,
@@ -29,6 +34,7 @@ class BrightData(Integration):
             }
         )
 
+    @override
     def fetch_html(self, q: Query | str, /) -> str:
         if isinstance(q, str):
             res = self.client.post(
