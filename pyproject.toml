@@ -21,8 +21,7 @@ requires-python = ">=3.10"
 dependencies = [
   "primp",
   "protobuf>=5.27.0",
-  "selectolax",
-  "rjson"
+  "selectolax"
 ]
 
 [project.optional-dependencies]
