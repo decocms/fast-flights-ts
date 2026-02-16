@@ -15,6 +15,8 @@ from .model import (
 
 
 class MetaList(list[Flights]):
+    """Searched flights list, with metadata attached."""
+
     metadata: JsMetadata
 
 
@@ -50,6 +52,9 @@ def parse_js(js: str):
     meta = JsMetadata(alliances=alliances, airlines=airlines)
 
     flights = MetaList()
+    if payload[3][0] is None:
+        return flights
+
     for k in payload[3][0]:
         flight = k[0]
         price = k[1][0][1]
