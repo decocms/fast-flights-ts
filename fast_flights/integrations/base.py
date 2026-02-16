@@ -1,7 +1,5 @@
 import os
-
 from abc import ABC
-from typing import Union
 
 from ..querying import Query
 
@@ -15,7 +13,7 @@ except ModuleNotFoundError:
 
 
 class Integration(ABC):
-    def fetch_html(self, q: Union[Query, str], /) -> str:
+    def fetch_html(self, q: Query | str, /) -> str:
         """Fetch the flights page HTML from a query.
 
         Args:

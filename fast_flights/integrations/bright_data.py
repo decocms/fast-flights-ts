@@ -1,12 +1,11 @@
 # original by @Manouchehri
 # pr: #64
 
-from typing import Optional, Union
 from primp import Client
 
-from .base import Integration, get_env
-from ..querying import Query
 from ..fetcher import URL
+from ..querying import Query
+from .base import Integration, get_env
 
 DEFAULT_API_URL = "https://api.brightdata.com/request"
 DEFAULT_DATA_SERP_ZONE = "serp_api1"
@@ -18,7 +17,7 @@ class BrightData(Integration):
     def __init__(
         self,
         *,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         api_url: str = DEFAULT_API_URL,
         zone: str = DEFAULT_DATA_SERP_ZONE,
     ):
@@ -30,7 +29,7 @@ class BrightData(Integration):
             }
         )
 
-    def fetch_html(self, q: Union[Query, str], /) -> str:
+    def fetch_html(self, q: Query | str, /) -> str:
         if isinstance(q, str):
             res = self.client.post(
                 self.api_url, json={"url": URL + "?q=" + q, "zone": self.zone}

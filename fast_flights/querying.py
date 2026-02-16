@@ -1,10 +1,10 @@
 from base64 import b64encode
-from datetime import datetime as Datetime
 from dataclasses import dataclass
+from datetime import datetime as Datetime
 from typing import Literal, Optional, Union
 
+from .pb.flights_pb2 import Airport, FlightData, Info, Passenger, Seat, Trip
 from .types import Currency, Language, SeatType, TripType
-from .pb.flights_pb2 import Airport, Info, Passenger, Seat, FlightData, Trip
 
 
 @dataclass
@@ -59,11 +59,11 @@ class Query:
 
 @dataclass
 class FlightQuery:
-    date: Union[str, Datetime]
+    date: str | Datetime
     from_airport: str
     to_airport: str
-    max_stops: Optional[int] = None
-    airlines: Optional[list[str]] = None
+    max_stops: int | None = None
+    airlines: list[str] | None = None
 
     def pb(self) -> FlightData:
         if isinstance(self.date, str):
@@ -79,7 +79,7 @@ class FlightQuery:
             airlines=self.airlines,
         )
 
-    def _setmaxstops(self, m: Optional[int] = None) -> "FlightQuery":
+    def _setmaxstops(self, m: int | None = None) -> "FlightQuery":
         if m is not None:
             self.max_stops = m
 
@@ -95,12 +95,12 @@ class Passengers:
         infants_in_seat: int = 0,
         infants_on_lap: int = 0,
     ):
-        assert (
-            sum((adults, children, infants_in_seat, infants_on_lap)) <= 9
-        ), "Too many passengers (> 9)"
-        assert (
-            infants_on_lap <= adults
-        ), "Must have at least one adult per infant on lap"
+        assert sum((adults, children, infants_in_seat, infants_on_lap)) <= 9, (
+            "Too many passengers (> 9)"
+        )
+        assert infants_on_lap <= adults, (
+            "Must have at least one adult per infant on lap"
+        )
 
         self.adults = adults
         self.children = children
@@ -136,9 +136,9 @@ def create_query(
     seat: SeatType = "economy",
     trip: TripType = "one-way",
     passengers: Passengers = DEFAULT_PASSENGERS,
-    language: Union[str, Literal[""], Language] = "",
-    currency: Union[str, Literal[""], Currency] = "",
-    max_stops: Optional[int] = None,
+    language: str | Literal[""] | Language = "",
+    currency: str | Literal[""] | Currency = "",
+    max_stops: int | None = None,
 ) -> Query:
     """Create a query.
 

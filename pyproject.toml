@@ -22,7 +22,7 @@ dependencies = [
   "primp",
   "protobuf>=5.27.0",
   "selectolax",
-  "rjsonc"
+  "rjson"
 ]
 
 [project.optional-dependencies]
@@ -41,7 +41,7 @@ packages = [
 ]
 
 [tool.pyright]
-pythonVersion = '3.9'
+pythonVersion = "3.10"
 
 [dependency-groups]
 dev = [

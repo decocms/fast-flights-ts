@@ -45,11 +45,11 @@ class FlightData(__Composite):
     date: str
     from_airport: Airport
     to_airport: Airport
-    max_stops: Optional[int]
-    airlines: Union[__RepeatedScalarContainer[str], list[str]]
+    max_stops: int | None
+    airlines: __RepeatedScalarContainer[str] | list[str]
 
 class Info(__Composite):
-    data: Union[__RepeatedCompositeContainer[FlightData], list[FlightData]]
+    data: __RepeatedCompositeContainer[FlightData] | list[FlightData]
     seat: Seat
-    passengers: Union[__RepeatedCompositeContainer[Passenger], list[Passenger]]
+    passengers: __RepeatedCompositeContainer[Passenger] | list[Passenger]
     trip: Trip

@@ -1,4 +1,5 @@
-import rjsonc
+import json
+
 from selectolax.lexbor import LexborHTMLParser
 
 from .model import (
@@ -7,13 +8,13 @@ from .model import (
     Alliance,
     CarbonEmission,
     Flights,
-    SingleFlight,
     JsMetadata,
     SimpleDatetime,
+    SingleFlight,
 )
 
 
-class MetaList(list):
+class MetaList(list[Flights]):
     metadata: JsMetadata
 
 
@@ -27,15 +28,17 @@ def parse(html: str) -> MetaList:
 
 # Data discovery by @kftang, huge shout out!
 def parse_js(js: str):
-    json = js.split("data:", 1)[1].rsplit(",", 1)[0]
-    data = rjsonc.loads(json)
+    data = js.split("data:", 1)[1].rsplit(",", 1)[0]
+    print(data)
+
+    payload = json.loads(data)
 
     alliances = []
     airlines = []
 
     (alliances_data, airlines_data) = (
-        data[7][1][0],
-        data[7][1][1],
+        payload[7][1][0],
+        payload[7][1][1],
     )
 
     for code, name in alliances_data:
@@ -47,7 +50,7 @@ def parse_js(js: str):
     meta = JsMetadata(alliances=alliances, airlines=airlines)
 
     flights = MetaList()
-    for k in data[3][0]:
+    for k in payload[3][0]:
         flight = k[0]
         price = k[1][0][1]
 

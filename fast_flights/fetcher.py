@@ -1,16 +1,16 @@
-from typing import Optional, Union, overload
+from typing import overload
 
 from primp import Client
 
-from .querying import Query
+from .integrations.base import Integration
 from .parser import MetaList, parse
-from .integrations import Integration
+from .querying import Query
 
 URL = "https://www.google.com/travel/flights"
 
 
 @overload
-def get_flights(q: str, /, *, proxy: Optional[str] = None):
+def get_flights(q: str, /, *, proxy: str | None = None) -> MetaList:
     """Get flights using a str query.
 
     Examples:
@@ -19,7 +19,7 @@ def get_flights(q: str, /, *, proxy: Optional[str] = None):
 
 
 @overload
-def get_flights(q: Query, /, *, proxy: Optional[str] = None):
+def get_flights(q: Query, /, *, proxy: str | None = None) -> MetaList:
     """Get flights using a structured query.
 
     Example:
@@ -45,11 +45,11 @@ def get_flights(q: Query, /, *, proxy: Optional[str] = None):
 
 
 def get_flights(
-    q: Union[Query, str],
+    q: Query | str,
     /,
     *,
-    proxy: Optional[str] = None,
-    integration: Optional[Integration] = None,
+    proxy: str | None = None,
+    integration: Integration | None = None,
 ) -> MetaList:
     """Get flights.
 
@@ -62,11 +62,11 @@ def get_flights(
 
 
 def fetch_flights_html(
-    q: Union[Query, str],
+    q: Query | str,
     /,
     *,
-    proxy: Optional[str] = None,
-    integration: Optional[Integration] = None,
+    proxy: str | None = None,
+    integration: Integration | None = None,
 ) -> str:
     """Fetch flights and get the **HTML**.
 
@@ -76,7 +76,7 @@ def fetch_flights_html(
     """
     if integration is None:
         client = Client(
-            impersonate="chrome_133",
+            impersonate="chrome_145",
             impersonate_os="macos",
             referer=True,
             proxy=proxy,

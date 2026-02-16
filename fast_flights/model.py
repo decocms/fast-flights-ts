@@ -50,7 +50,7 @@ class CarbonEmission:
 
 @dataclass
 class Flights:
-    type: Union[str, Literal["multi"]]
+    type: str | Literal["multi"]
     price: int
     airlines: list[str]
     flights: list[SingleFlight]

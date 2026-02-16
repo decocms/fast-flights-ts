@@ -1,10 +1,11 @@
-from fast_flights import FlightQuery, Passengers, create_query, get_flights
 from pprint import pprint
+
+from fast_flights import FlightQuery, Passengers, create_query, get_flights
 
 query = create_query(
     flights=[
         FlightQuery(
-            date="2025-12-22",
+            date="2026-12-22",
             from_airport="MYJ",
             to_airport="TPE",
         ),
