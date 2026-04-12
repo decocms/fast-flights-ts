@@ -25,6 +25,7 @@
   },
   "keywords": ["google-flights", "flights", "scraper", "protobuf"],
   "license": "MIT",
+  "files": ["dist", "README.md", "LICENSE"],
   "optionalDependencies": {
     "node-libcurl": "^4.0.0"
   },

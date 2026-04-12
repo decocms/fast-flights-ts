@@ -1,7 +1,13 @@
 import type { Query } from "../query.js";
 
+export interface IntegrationOptions {
+  timeout?: number;
+  signal?: AbortSignal;
+  debug?: boolean;
+}
+
 export abstract class Integration {
-  abstract fetchHtml(q: Query | string): Promise<string> | string;
+  abstract fetchHtml(q: Query | string, opts?: IntegrationOptions): Promise<string> | string;
 }
 
 export function getEnv(key: string): string {

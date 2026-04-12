@@ -50,9 +50,9 @@ function encodeAirport(buf: Uint8Array, offset: number, airport: string): number
   return writeBytes(buf, offset, encoded);
 }
 
-// Encode to temp buffer, return slice
 function encodeAirportMsg(airport: string): Uint8Array {
-  const tmp = new Uint8Array(64);
+  // tag(1) + varint_len(max 2) + string bytes
+  const tmp = new Uint8Array(3 + airport.length * 3);
   const len = encodeAirport(tmp, 0, airport);
   return tmp.subarray(0, len);
 }
@@ -63,6 +63,16 @@ export interface FlightDataInput {
   to_airport: string;
   max_stops?: number | null;
   airlines?: string[] | null;
+}
+
+function estimateFlightDataSize(fd: FlightDataInput): number {
+  let size = 2 + fd.date.length * 3; // tag + varint + date
+  size += 4; // max_stops tag + varint
+  if (fd.airlines) {
+    for (const a of fd.airlines) size += 3 + a.length * 3;
+  }
+  size += 2 * (6 + fd.from_airport.length * 3 + fd.to_airport.length * 3); // from/to submessages
+  return size + 32; // padding
 }
 
 function encodeFlightData(buf: Uint8Array, offset: number, fd: FlightDataInput): number {
@@ -123,12 +133,19 @@ export interface InfoInput {
 }
 
 export function encodeInfo(info: InfoInput): Uint8Array {
-  const buf = new Uint8Array(512);
+  // Calculate buffer size dynamically
+  let totalSize = 16; // fixed overhead for seat, trip, passengers
+  for (const fd of info.data) {
+    totalSize += estimateFlightDataSize(fd) + 6; // submessage tag + varint len
+  }
+  totalSize += info.passengers.length * 2 + 4; // packed passengers
+
+  const buf = new Uint8Array(totalSize);
   let offset = 0;
 
   // field 3: repeated FlightData (submessages)
   for (const fd of info.data) {
-    const tmp = new Uint8Array(256);
+    const tmp = new Uint8Array(estimateFlightDataSize(fd));
     const fdLen = encodeFlightData(tmp, 0, fd);
     buf[offset++] = TAG_INFO_DATA;
     offset = writeVarint(buf, offset, fdLen);
