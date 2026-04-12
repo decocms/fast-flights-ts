@@ -1,5 +1,5 @@
 {
-  "name": "fast-flights",
+  "name": "fast-flights-ts",
   "version": "3.0.0",
   "description": "Fast, strongly-typed Google Flights scraper for TypeScript/Node.js",
   "type": "module",

@@ -1,12 +1,12 @@
 <div align="center">
 
-# fast-flights
+# fast-flights-ts
 
 Fast, strongly-typed Google Flights scraper for Node.js.
 Zero-dependency core with hand-rolled protobuf encoding.
 
 ```bash
-npm install fast-flights
+npm install fast-flights-ts
 ```
 
 </div>
@@ -17,7 +17,7 @@ npm install fast-flights
 ## Quick start
 
 ```typescript
-import { createQuery, Passengers, getFlights } from "fast-flights";
+import { createQuery, Passengers, getFlights } from "fast-flights-ts";
 
 const query = createQuery({
   flights: [
@@ -49,8 +49,8 @@ for (const flight of results) {
 ### Bright Data
 
 ```typescript
-import { getFlights } from "fast-flights";
-import { BrightData } from "fast-flights";
+import { getFlights } from "fast-flights-ts";
+import { BrightData } from "fast-flights-ts";
 
 const results = await getFlights(query, {
   integration: new BrightData({ api_key: "your-key" }),
