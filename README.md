@@ -1,165 +1,178 @@
 <div align="center">
 
-# ✈️ fast-flights (v3.0rc1)
+# fast-flights
 
-The fast and strongly-typed Google Flights scraper (API) implemented in Python.
-Based on Base64-encoded Protobuf string.
+Fast, strongly-typed Google Flights scraper for Node.js.
+Zero-dependency core with hand-rolled protobuf encoding.
 
-[**Documentation (v2)**](https://aweirddev.github.io/flights) • [Issues](https://github.com/AWeirdDev/flights/issues) • [PyPi (v3.0rc0)](https://pypi.org/project/fast-flights/3.0rc0/)
-
-```haskell
-$ pip install fast-flights
+```bash
+npm install fast-flights
 ```
 
 </div>
 
-## At a glance
-```python
-from fast_flights import (
-    FlightQuery,
-    Passengers, 
-    create_query, 
-    get_flights
-)
+> Forked from [AWeirdDev/flights](https://github.com/AWeirdDev/flights) (Python).
+> Ported to TypeScript by [Claude Opus 4.6](https://claude.ai).
 
-query = create_query(
-    flights=[
-        FlightQuery(
-            date="YYYY-MM-DD",   # change the date
-            from_airport="MYJ",  # three-letter name
-            to_airport="TPE",    # three-letter name
-        ),
-    ],
-    seat="economy",  # business/economy/first/premium-economy
-    trip="one-way",  # multi-city/one-way/round-trip
-    passengers=Passengers(adults=1),
-    language="zh-TW",
-)
-res = get_flights(query)
+## Quick start
+
+```typescript
+import { createQuery, Passengers, getFlights } from "fast-flights";
+
+const query = createQuery({
+  flights: [
+    {
+      date: "2026-02-16",
+      from_airport: "MYJ",
+      to_airport: "TPE",
+    },
+  ],
+  seat: "economy",
+  trip: "one-way",
+  passengers: new Passengers({ adults: 1 }),
+  language: "zh-TW",
+});
+
+const results = await getFlights(query);
+
+for (const flight of results) {
+  console.log(
+    flight.airlines.join(", "),
+    `$${flight.price}`,
+    flight.flights.map((f) => `${f.from_airport.code}->${f.to_airport.code}`).join(" "),
+  );
+}
 ```
 
 ## Integrations
-If you'd like, you can use integrations.
 
-Bright data:
+### Bright Data
 
-```python
-from fast_flights import get_flights
-from fast_flights.integrations import BrightData
+```typescript
+import { getFlights } from "fast-flights";
+import { BrightData } from "fast-flights";
 
-get_flights(..., integration=BrightData())
+const results = await getFlights(query, {
+  integration: new BrightData({ api_key: "your-key" }),
+});
 ```
 
-## What's new
-- `v2.0` – New (much more succinct) API, fallback support for Playwright serverless functions, and [documentation](https://aweirddev.github.io/flights)!
-- `v2.2` - Now supports **local playwright** for sending requests.
-- `v3.0rc0` - Uses Javascript data instead.
+Env vars: `BRIGHT_DATA_API_KEY`, `BRIGHT_DATA_API_URL`, `BRIGHT_DATA_SERP_ZONE`.
 
-## Contributing
-Contributing is welcomed! A few notes though:
-1. please no ai slop. i am not reading all that.
-2. one change at a time. what your title says is what you've changed.
-3. no new dependencies unless it's related to the core parsing.
-4. really, i cant finish reading all of them, i have other projects and life to do. really sorry
+## API
 
-***
+### `createQuery(options)`
 
-## How it's made
+| Option | Type | Default |
+|--------|------|---------|
+| `flights` | `FlightQueryInput[]` | required |
+| `seat` | `"economy" \| "premium-economy" \| "business" \| "first"` | `"economy"` |
+| `trip` | `"round-trip" \| "one-way" \| "multi-city"` | `"one-way"` |
+| `passengers` | `Passengers` | 1 adult |
+| `language` | `Language \| ""` | `""` |
+| `currency` | `Currency \| ""` | `""` |
+| `max_stops` | `number \| null` | `null` |
 
-The other day, I was making a chat-interface-based trip recommendation app and wanted to add a feature that can search for flights available for booking. My personal choice is definitely [Google Flights](https://flights.google.com) since Google always has the best and most organized data on the web. Therefore, I searched for APIs on Google.
+### `getFlights(query, options?)`
 
-> 🔎 **Search** <br />
-> google flights api
+Returns `Promise<FlightResults>` -- an array of `Flights` with attached `metadata`.
 
-The results? Bad. It seems like they discontinued this service and it now lives in the Graveyard of Google.
+### `Passengers`
 
-> <sup><a href="https://duffel.com/blog/google-flights-api" target="_blank">🧏‍♂️ <b>duffel.com</b></a></sup><br />
-> <sup><i>Google Flights API: How did it work & what happened to it?</i></b>
->
-> The Google Flights API offered developers access to aggregated airline data, including flight times, availability, and prices. Over a decade ago, Google announced the acquisition of ITA Software Inc. which it used to develop its API. **However, in 2018, Google ended access to the public-facing API and now only offers access through the QPX enterprise product**.
-
-That's awful! I've also looked for free alternatives but their rate limits and pricing are just 😬 (not a good fit/deal for everyone).
-
-<br />
-
-However, Google Flights has their UI – [flights.google.com](https://flights.google.com). So, maybe I could just use Developer Tools to log the requests made and just replicate all of that? Undoubtedly not! Their requests are just full of numbers and unreadable text, so that's not the solution.
-
-Perhaps, we could scrape it? I mean, Google allowed many companies like [Serpapi](https://google.com/search?q=serpapi) to scrape their web just pretending like nothing happened... So let's scrape our own.
-
-> 🔎 **Search** <br />
-> google flights ~~api~~ scraper pypi
-
-Excluding the ones that are not active, I came across [hugoglvs/google-flights-scraper](https://pypi.org/project/google-flights-scraper) on Pypi. I thought to myself: "aint no way this is the solution!"
-
-I checked hugoglvs's code on [GitHub](https://github.com/hugoglvs/google-flights-scraper), and I immediately detected "playwright," my worst enemy. One word can describe it well: slow. Two words? Extremely slow. What's more, it doesn't even run on the **🗻 Edge** because of configuration errors, missing libraries... etc. I could just reverse [try.playwright.tech](https://try.playwright.tech) and use a better environment, but that's just too risky if they added Cloudflare as an additional security barrier 😳.
-
-Life tells me to never give up. Let's just take a look at their URL params...
-
-```markdown
-https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI0LTA1LTI4agcIARIDVFBFcgcIARIDTVlKGh4SCjIwMjQtMDUtMzBqBwgBEgNNWUpyBwgBEgNUUEVAAUgBcAGCAQsI____________AZgBAQ&hl=en
+```typescript
+new Passengers({ adults: 2, children: 1, infants_in_seat: 0, infants_on_lap: 0 })
 ```
 
-| Param | Content | My past understanding |
-|-------|---------|-----------------------|
-| hl    | en      | Sets the language.    |
-| tfs   | CBwQAhoeEgoyMDI0LTA1LTI4agcIARID… | What is this???? 🤮🤮 |
+Max 9 total. Infants on lap cannot exceed adult count.
 
-I removed the `?tfs=` parameter and found out that this is the control of our request! And it looks so base64-y.
+## Response types
 
-If we decode it to raw text, we can still see the dates, but we're not quite there — there's too much unwanted Unicode text.
-
-Or maybe it's some kind of a **data-storing method** Google uses? What if it's something like JSON? Let's look it up.
-
-> 🔎 **Search** <br />
-> google's json alternative
-
-> 🐣 **Result**<br />
-> Solution: The Power of **Protocol Buffers**
-> 
-> LinkedIn turned to Protocol Buffers, often referred to as **protobuf**, a binary serialization format developed by Google. The key advantage of Protocol Buffers is its efficiency, compactness, and speed, making it significantly faster than JSON for serialization and deserialization.
-
-Gotcha, Protobuf! Let's feed it to an online decoder and see how it does:
-
-> 🔎 **Search** <br />
-> protobuf decoder
-
-> 🐣 **Result**<br />
-> [protobuf-decoder.netlify.app](https://protobuf-decoder.netlify.app)
-
-I then pasted the Base64-encoded string to the decoder and no way! It DID return valid data!
-
-![annotated, Protobuf Decoder screenshot](https://github.com/AWeirdDev/flights/assets/90096971/77dfb097-f961-4494-be88-3640763dbc8c)
-
-I immediately recognized the values — that's my data, that's my query!
-
-So, I wrote some simple Protobuf code to decode the data.
-
-```protobuf
-syntax = "proto3"
-
-message Airport {
-    string name = 2;
+```typescript
+interface Flights {
+  type: string;
+  price: number;
+  airlines: string[];
+  flights: SingleFlight[];
+  carbon: CarbonEmission;
 }
 
-message FlightInfo {
-    string date = 2;
-    Airport dep_airport = 13;
-    Airport arr_airport = 14;
+interface SingleFlight {
+  from_airport: Airport; // { code, name }
+  to_airport: Airport;
+  departure: SimpleDatetime;
+  arrival: SimpleDatetime;
+  duration: number; // minutes
+  plane_type: string;
 }
 
-message GoogleSucks {
-    repeated FlightInfo = 3;
+interface FlightResults extends Array<Flights> {
+  metadata: JsMetadata; // { airlines, alliances }
 }
 ```
 
-It works! Now, I won't consider myself an "experienced Protobuf developer" but rather a complete beginner.
+## Benchmarks
 
-I have no idea what I wrote but... it worked! And here it is, `fast-flights`.
+Compared against the original Python implementation (10,000 iterations).
 
-***
+### Encoding (query + protobuf + base64)
 
-<div align="center">
+| | ops/sec | latency |
+|-|---------|---------|
+| Python | 215,851 | 4.6 us |
+| **TypeScript** | **469,403** | **2.1 us** |
 
-(c) 2024-2026 AWeirdDev, and all the awesome people
+**2.2x faster.**
 
-</div>
+### Parsing (JSON extraction + flight mapping)
+
+| | ops/sec | latency |
+|-|---------|---------|
+| Python | 17,282 | 57.9 us |
+| **TypeScript** | **55,008** | **18.2 us** |
+
+**3.2x faster.**
+
+### Detailed breakdown (`npm run bench`)
+
+| Operation | ops/sec | mean |
+|-----------|---------|------|
+| `encodeInfo` (simple) | 804,701 | 1.2 us |
+| `encodeInfo` (complex) | 331,556 | 3.0 us |
+| `encodeInfoToBase64` (simple) | 712,540 | 1.4 us |
+| `createQuery` (simple) | 15,908,037 | 0.06 us |
+| `createQuery` + `toStr()` | 667,147 | 1.5 us |
+| `parseJs` (5 flights) | 193,346 | 5.2 us |
+| `parseJs` (50 flights) | 23,748 | 42.1 us |
+| `parseJs` (200 flights) | 5,863 | 170.5 us |
+
+## How it works
+
+1. **Query** -- builds a protobuf `Info` message from flight parameters
+2. **Protobuf** -- hand-rolled binary encoder (~80 lines, no protobufjs) serializes to bytes
+3. **Base64** -- encoded bytes become the `tfs` URL parameter
+4. **Fetch** -- HTTP request with optional browser TLS fingerprinting via `node-libcurl`
+5. **Parse** -- extracts embedded JS data from response HTML using `indexOf`/`slice` (no DOM parser)
+
+### Why it's fast
+
+- **Manual protobuf encoder** with pre-allocated `Uint8Array(512)`, zero intermediate allocations
+- **No DOM parsing** -- raw string ops for HTML extraction
+- **Plain object literals** from parser for V8 hidden class optimization
+- **Zero runtime dependencies** -- `node-libcurl` is optional for TLS fingerprinting
+- **10 KB** bundled (ESM + CJS dual output)
+
+## Development
+
+```bash
+npm install
+npm run typecheck
+npm test
+npm run bench
+npm run build
+```
+
+## License
+
+MIT -- see [LICENSE](LICENSE).
+
+Original Python library by [AWeirdDev](https://github.com/AWeirdDev).

@@ -1,0 +1,22 @@
+export type Language =
+  | "af" | "bs" | "ca" | "cs" | "da" | "de" | "et" | "en-GB" | "en-US"
+  | "es" | "es-419" | "eu" | "fil" | "fr" | "gl" | "hr" | "id" | "is"
+  | "it" | "sw" | "lv" | "lt" | "hu" | "ms" | "nl" | "no" | "pl"
+  | "pt-BR" | "pt-PT" | "ro" | "sq" | "sk" | "sl" | "sr-Latn" | "fi"
+  | "sv" | "vi" | "tr" | "el" | "bg" | "mk" | "mn" | "ru" | "sr" | "uk"
+  | "ka" | "iw" | "ur" | "ar" | "fa" | "am" | "ne" | "mr" | "hi" | "bn"
+  | "pa" | "gu" | "ta" | "te" | "kn" | "ml" | "si" | "th" | "lo" | "km"
+  | "ko" | "ja" | "zh-CN" | "zh-TW";
+
+export type Currency =
+  | "ALL" | "DZD" | "ARS" | "AMD" | "AWG" | "AUD" | "AZN" | "BSD" | "BHD"
+  | "BYN" | "BMD" | "BAM" | "BRL" | "GBP" | "BGN" | "CAD" | "XPF" | "CLP"
+  | "CNY" | "COP" | "CRC" | "CUP" | "CZK" | "DKK" | "DOP" | "EGP" | "EUR"
+  | "GEL" | "HKD" | "HUF" | "ISK" | "INR" | "IDR" | "IRR" | "ILS" | "JMD"
+  | "JPY" | "JOD" | "KZT" | "KWD" | "LBP" | "MKD" | "MYR" | "MXN" | "MDL"
+  | "MAD" | "TWD" | "NZD" | "NOK" | "OMR" | "PKR" | "PAB" | "PEN" | "PHP"
+  | "PLN" | "QAR" | "RON" | "RUB" | "SAR" | "RSD" | "SGD" | "ZAR" | "KRW"
+  | "SEK" | "CHF" | "THB" | "TRY" | "UAH" | "AED" | "USD" | "VND";
+
+export type SeatType = "economy" | "premium-economy" | "business" | "first";
+export type TripType = "round-trip" | "one-way" | "multi-city";

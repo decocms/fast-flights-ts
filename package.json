@@ -1,0 +1,37 @@
+{
+  "name": "fast-flights",
+  "version": "3.0.0",
+  "description": "Fast, strongly-typed Google Flights scraper for TypeScript/Node.js",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "bench": "vitest bench"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/decocms/fast-flights-ts.git"
+  },
+  "keywords": ["google-flights", "flights", "scraper", "protobuf"],
+  "license": "MIT",
+  "optionalDependencies": {
+    "node-libcurl": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^3.0.0"
+  }
+}
