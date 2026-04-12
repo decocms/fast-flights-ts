@@ -11,11 +11,13 @@ import type {
 } from "./models.js";
 
 export function parse(html: string): FlightResults {
-  // Extract <script class="ds:1"> content via indexOf (no DOM parser needed)
-  const marker = 'class="ds:1">';
-  const start = html.indexOf(marker);
-  if (start === -1) throw new Error('Could not find script tag with class="ds:1"');
-  const contentStart = start + marker.length;
+  // Find <script class="ds:1" ...> — there may be other attributes (e.g. nonce) before >
+  const classMarker = 'class="ds:1"';
+  const classIdx = html.indexOf(classMarker);
+  if (classIdx === -1) throw new Error('Could not find script tag with class="ds:1"');
+  const tagClose = html.indexOf(">", classIdx + classMarker.length);
+  if (tagClose === -1) throw new Error("Could not find closing > for ds:1 script tag");
+  const contentStart = tagClose + 1;
   const end = html.indexOf("</script>", contentStart);
   if (end === -1) throw new Error("Could not find closing </script> tag");
   return parseJs(html.slice(contentStart, end));
@@ -59,8 +61,10 @@ export function parseJs(js: string): FlightResults {
     for (const sf of flight[2]) {
       const fromAirport: Airport = { code: sf[3], name: sf[4] };
       const toAirport: Airport = { code: sf[6], name: sf[5] };
-      const departure: SimpleDatetime = { date: sf[20], time: sf[8] };
-      const arrival: SimpleDatetime = { date: sf[21], time: sf[10] };
+      const depTime = sf[8];
+      const arrTime = sf[10];
+      const departure: SimpleDatetime = { date: sf[20], time: [depTime[0], depTime[1] ?? 0] };
+      const arrival: SimpleDatetime = { date: sf[21], time: [arrTime[0], arrTime[1] ?? 0] };
       const planeType: string = sf[17];
       const duration: number = sf[11];
 
