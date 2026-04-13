@@ -17,7 +17,8 @@
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "bench": "vitest bench"
+    "bench": "vitest bench",
+    "bench:cross": "bash bench/cross-lang.sh"
   },
   "repository": {
     "type": "git",

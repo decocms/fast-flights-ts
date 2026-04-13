@@ -160,27 +160,27 @@ interface FlightResults extends Array<Flights> {
 
 ## Benchmarks
 
+Compared against the original [Python implementation](https://github.com/AWeirdDev/flights) v3 (10,000 iterations, `bash bench/cross-lang.sh`).
+
 ### Encoding (query + protobuf + base64)
 
 | | ops/sec | latency |
 |-|---------|---------|
-| Python | 215,851 | 4.6 us |
-| **TypeScript** | **728,724** | **1.4 us** |
+| Python v3 | 214,626 | 4.7 us |
+| **TypeScript** | **462,181** | **2.2 us** |
 
-**3.4x faster.**
+**2.2x faster.**
 
-### Parsing
+### Parsing (20-flight payload, JSON extract + mapping)
 
-| Operation | ops/sec | mean |
-|-----------|---------|------|
-| `parseRpcResponse` (5 flights) | 151,354 | 6.6 us |
-| `parseRpcResponse` (50 flights) | 17,604 | 56.8 us |
-| `parseRpcResponse` (200 flights) | 4,368 | 229 us |
-| `parseJs` (5 flights) | 185,223 | 5.4 us |
-| `parseJs` (50 flights) | 23,234 | 43.0 us |
-| `parseJs` (200 flights) | 5,792 | 172.6 us |
+| | ops/sec | latency |
+|-|---------|---------|
+| Python v3 | 17,711 | 56.5 us |
+| **TypeScript** | **53,911** | **18.5 us** |
 
-### Full breakdown (`npm run bench`)
+**3.0x faster.**
+
+### Detailed breakdown (`npm run bench`)
 
 | Operation | ops/sec | mean |
 |-----------|---------|------|
@@ -189,6 +189,9 @@ interface FlightResults extends Array<Flights> {
 | `encodeInfoToBase64` | 768,435 | 1.3 us |
 | `createQuery` | 16,330,189 | 0.06 us |
 | `createQuery` + `toStr()` | 728,724 | 1.4 us |
+| `parseRpcResponse` (5 flights) | 151,354 | 6.6 us |
+| `parseRpcResponse` (50 flights) | 17,604 | 56.8 us |
+| `parseRpcResponse` (200 flights) | 4,368 | 229 us |
 
 ## How it works
 
