@@ -1,9 +1,8 @@
 import type { FlightResults } from "./models.js";
 import { Query } from "./query.js";
-import { Trip } from "./protobuf.js";
 import { parse, parseRpcResponse } from "./parser.js";
 import type { Integration } from "./integrations/base.js";
-import { HttpError, CaptchaError, TimeoutError, FlightError, ParseError } from "./errors.js";
+import { HttpError, CaptchaError, TimeoutError, FlightError } from "./errors.js";
 
 const FLIGHTS_URL = "https://www.google.com/travel/flights";
 const RPC_URL = "https://www.google.com/_/FlightsFrontendUi/data/travel.frontend.flights.FlightsFrontendService/GetShoppingResults";
@@ -12,8 +11,6 @@ const DEFAULT_TIMEOUT = 30_000;
 const DEFAULT_RETRY_DELAY = 1_000;
 const RETRYABLE_STATUS = new Set([429, 503, 502, 504]);
 
-const SEAT_TO_RPC: Record<number, number> = { 1: 1, 2: 2, 3: 3, 4: 4 };
-const TRIP_TO_RPC: Record<number, number> = { 1: 1, 2: 2, 3: 3 };
 
 export interface FetchOptions {
   proxy?: string;
@@ -83,8 +80,8 @@ function buildRpcSegment(fd: { date: string; from_airport: string; to_airport: s
 
 function buildRpcPayload(q: Query): string {
   const segments = q.flightData.map(buildRpcSegment);
-  const tripType = TRIP_TO_RPC[q.trip] ?? 2;
-  const seatType = SEAT_TO_RPC[q.seat] ?? 1;
+  const tripType = q.trip || 2;
+  const seatType = q.seat || 1;
 
   // Count passengers by type from the protobuf enum values
   const pax = [0, 0, 0, 0]; // adults, children, infants_in_seat, infants_on_lap

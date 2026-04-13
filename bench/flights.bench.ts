@@ -1,7 +1,7 @@
 import { bench, describe } from "vitest";
 import { encodeInfo, encodeInfoToBase64, Seat, Trip, Passenger } from "../src/protobuf.js";
 import { createQuery, Passengers } from "../src/query.js";
-import { parseJs } from "../src/parser.js";
+import { parseJs, parsePayload, parseRpcResponse } from "../src/parser.js";
 
 // --- Protobuf encoding benchmarks ---
 
@@ -97,57 +97,77 @@ describe("query pipeline", () => {
 
 // --- Parser benchmarks ---
 
+function buildFlightEntry(price: number) {
+  return [
+    [
+      "Nonstop",
+      ["Japan Airlines", "ANA"],
+      [
+        [
+          null, null, null,
+          "MYJ", "Matsuyama", "Taipei", "TPE",
+          null, [10, 30], null, [14, 45], 180,
+          null, null, null, null, null,
+          "Boeing 787", null, null,
+          [2026, 2, 16], [2026, 2, 16],
+        ],
+      ],
+      null, null, null, null, null, null, null, null, null,
+      null, null, null, null, null, null, null, null, null, null,
+      [null, null, null, null, null, null, null, 85000, 92000],
+    ],
+    [[null, price]],
+  ];
+}
+
 function buildMockPayload(numFlights: number): string {
   const flights = [];
-  for (let i = 0; i < numFlights; i++) {
-    flights.push([
-      [
-        "Nonstop",
-        ["Japan Airlines", "ANA"],
-        [
-          [
-            null, null, null,
-            "MYJ", "Matsuyama", "Taipei", "TPE",
-            null, [10, 30], null, [14, 45], 180,
-            null, null, null, null, null,
-            "Boeing 787", null, null,
-            [2026, 2, 16], [2026, 2, 16],
-          ],
-        ],
-        null, null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, null, null, null,
-        [null, null, null, null, null, null, null, 85000, 92000],
-      ],
-      [[null, 350 + i]],
-    ]);
-  }
+  for (let i = 0; i < numFlights; i++) flights.push(buildFlightEntry(350 + i));
 
-  const payload = [
-    null, null, null, [flights],
-    null, null, null,
-    [null, [
-      [["*A", "Star Alliance"], ["OW", "Oneworld"]],
-      [["JL", "Japan Airlines"], ["NH", "ANA"]],
-    ]],
-  ];
+  const payload: any[] = [];
+  payload[2] = [flights.slice(0, Math.min(3, numFlights))];
+  payload[3] = [flights.slice(3)];
+  payload[7] = [null, [
+    [["*A", "Star Alliance"], ["OW", "Oneworld"]],
+    [["JL", "Japan Airlines"], ["NH", "ANA"]],
+  ]];
 
   return `data:${JSON.stringify(payload)},sideChannel`;
 }
 
-const smallPayload = buildMockPayload(5);
-const mediumPayload = buildMockPayload(50);
-const largePayload = buildMockPayload(200);
+function buildMockRpcResponse(numFlights: number): string {
+  const flights = [];
+  for (let i = 0; i < numFlights; i++) flights.push(buildFlightEntry(350 + i));
 
-describe("parser", () => {
-  bench("parseJs (5 flights)", () => {
-    parseJs(smallPayload);
-  });
+  const payload: any[] = [];
+  payload[2] = [flights.slice(0, Math.min(3, numFlights))];
+  payload[3] = [flights.slice(3)];
+  payload[7] = [null, [
+    [["*A", "Star Alliance"], ["OW", "Oneworld"]],
+    [["JL", "Japan Airlines"], ["NH", "ANA"]],
+  ]];
 
-  bench("parseJs (50 flights)", () => {
-    parseJs(mediumPayload);
-  });
+  const inner = JSON.stringify(payload);
+  const outer = JSON.stringify([[null, null, inner]]);
+  return ")]}'\n" + outer;
+}
 
-  bench("parseJs (200 flights)", () => {
-    parseJs(largePayload);
-  });
+const smallJs = buildMockPayload(5);
+const mediumJs = buildMockPayload(50);
+const largeJs = buildMockPayload(200);
+
+const smallRpc = buildMockRpcResponse(5);
+const mediumRpc = buildMockRpcResponse(50);
+const largeRpc = buildMockRpcResponse(200);
+
+describe("parseJs (HTML path)", () => {
+  bench("5 flights", () => { parseJs(smallJs); });
+  bench("50 flights", () => { parseJs(mediumJs); });
+  bench("200 flights", () => { parseJs(largeJs); });
+});
+
+describe("parseRpcResponse (RPC path)", () => {
+  bench("5 flights", () => { parseRpcResponse(smallRpc); });
+  bench("50 flights", () => { parseRpcResponse(mediumRpc); });
+  bench("200 flights", () => { parseRpcResponse(largeRpc); });
 });
