@@ -78,7 +78,8 @@ function buildRpcSegment(fd: { date: string; from_airport: string; to_airport: s
   ];
 }
 
-function buildRpcPayload(q: Query): string {
+/** @internal Exported for testing. */
+export function buildRpcPayload(q: Query): string {
   const segments = q.flightData.map(buildRpcSegment);
   const tripType = q.trip || 2;
   const seatType = q.seat || 1;
@@ -112,7 +113,8 @@ function buildRpcPayload(q: Query): string {
   return `f.req=${encodeURIComponent(wrapped)}`;
 }
 
-function buildRpcUrl(q: Query): string {
+/** @internal Exported for testing. */
+export function buildRpcUrl(q: Query): string {
   const params = new URLSearchParams();
   if (q.language) params.set("hl", q.language);
   if (q.currency) params.set("curr", q.currency);
