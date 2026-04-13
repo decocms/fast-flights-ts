@@ -112,13 +112,22 @@ function buildRpcPayload(q: Query): string {
   return `f.req=${encodeURIComponent(wrapped)}`;
 }
 
+function buildRpcUrl(q: Query): string {
+  const params = new URLSearchParams();
+  if (q.language) params.set("hl", q.language);
+  if (q.currency) params.set("curr", q.currency);
+  const qs = params.toString();
+  return qs ? `${RPC_URL}?${qs}` : RPC_URL;
+}
+
 async function fetchRpcOnce(q: Query, opts: FetchOptions): Promise<string> {
   const timeout = opts.timeout ?? DEFAULT_TIMEOUT;
   const body = buildRpcPayload(q);
+  const url = buildRpcUrl(q);
   const { signal, cleanup } = mergeSignals(timeout, opts.signal);
 
   try {
-    const res = await fetch(RPC_URL, {
+    const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
