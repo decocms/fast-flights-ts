@@ -1,6 +1,6 @@
 export { createQuery, Query, Passengers, type FlightQueryInput } from "./query.js";
 export { getFlights, fetchFlightsHtml, type FetchOptions } from "./fetcher.js";
-export { parse, parseJs } from "./parser.js";
+export { parse, parseJs, parsePayload, parseRpcResponse } from "./parser.js";
 export { Integration, type IntegrationOptions } from "./integrations/base.js";
 export { BrightData } from "./integrations/bright-data.js";
 export {

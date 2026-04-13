@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseJs } from "../src/parser.js";
+import { parseJs, parsePayload, parseRpcResponse } from "../src/parser.js";
 
 // Minimal mock payload matching the structure expected by the parser
 function makeMockJs(): string {
@@ -101,6 +101,58 @@ describe("parser", () => {
     expect(sf.plane_type).toBe("Boeing 787");
     expect(flight.carbon.emission).toBe(85000);
     expect(flight.carbon.typical_on_route).toBe(92000);
+  });
+
+  it("parsePayload extracts best and other flights", () => {
+    const flightEntry = (price: number) => [
+      [
+        "Nonstop", ["TestAir"],
+        [[null, null, null, "AAA", "A", "B", "BBB", null, [10, 0], null, [12, 0], 120,
+          null, null, null, null, null, "737", null, null, [2026, 1, 1], [2026, 1, 1]]],
+        null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
+        [null, null, null, null, null, null, null, 100, 200],
+      ],
+      [[null, price]],
+    ];
+
+    const payload: any[] = [];
+    payload[2] = [[flightEntry(100), flightEntry(150)]]; // best flights
+    payload[3] = [[flightEntry(300), flightEntry(400)]]; // other flights
+    payload[7] = [null, [[["SA", "Star Alliance"]], [["TA", "TestAir"]]]];
+
+    const results = parsePayload(payload);
+    expect(results).toHaveLength(4); // 2 best + 2 other
+    expect(results[0].price).toBe(100);
+    expect(results[1].price).toBe(150);
+    expect(results[2].price).toBe(300);
+    expect(results[3].price).toBe(400);
+  });
+
+  it("parseRpcResponse strips prefix and parses nested JSON", () => {
+    const payload: any[] = [];
+    payload[2] = null;
+    payload[3] = [[[
+      [
+        "Direct", ["UA"],
+        [[null, null, null, "SFO", "SF", "Tokyo", "NRT", null, [10, 0], null, [14, 0], 600,
+          null, null, null, null, null, "777", null, null, [2026, 5, 1], [2026, 5, 2]]],
+        null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
+        [null, null, null, null, null, null, null, 500, 600],
+      ],
+      [[null, 999]],
+    ]]];
+    payload[7] = [null, [[["SA", "Star"]], [["UA", "United"]]]];
+
+    const innerJson = JSON.stringify(payload);
+    const outerJson = JSON.stringify([[null, null, innerJson]]);
+    const rpcText = ")]}'\n" + outerJson;
+
+    const results = parseRpcResponse(rpcText);
+    expect(results).toHaveLength(1);
+    expect(results[0].price).toBe(999);
+    expect(results[0].airlines).toEqual(["UA"]);
   });
 
   it("returns empty results when payload[3][0] is null", () => {

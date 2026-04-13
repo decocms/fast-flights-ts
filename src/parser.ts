@@ -15,12 +15,100 @@ function makeResults(flights: Flights[], metadata: JsMetadata): FlightResults {
   return Object.assign(flights, { metadata }) as FlightResults;
 }
 
+/** Parse a single flight entry from Google's nested array format. */
+function parseFlightEntry(k: any): Flights | null {
+  const flight = k?.[0];
+  if (!flight) return null;
+
+  const price: number = k[1]?.[0]?.[1] ?? 0;
+  const typ: string = flight[0] ?? "";
+  const airlineNames: string[] = flight[1] ?? [];
+
+  const sgFlights: SingleFlight[] = [];
+
+  if (Array.isArray(flight[2])) {
+    for (const sf of flight[2]) {
+      if (!sf) continue;
+      const fromAirport: Airport = { code: sf[3] ?? "", name: sf[4] ?? "" };
+      const toAirport: Airport = { code: sf[6] ?? "", name: sf[5] ?? "" };
+      const depTime = sf[8];
+      const arrTime = sf[10];
+      const departure: SimpleDatetime = {
+        date: sf[20] ?? [0, 0, 0],
+        time: [depTime?.[0] ?? 0, depTime?.[1] ?? 0],
+      };
+      const arrival: SimpleDatetime = {
+        date: sf[21] ?? [0, 0, 0],
+        time: [arrTime?.[0] ?? 0, arrTime?.[1] ?? 0],
+      };
+
+      sgFlights.push({
+        from_airport: fromAirport,
+        to_airport: toAirport,
+        departure,
+        arrival,
+        duration: sf[11] ?? 0,
+        plane_type: sf[17] ?? "",
+      });
+    }
+  }
+
+  const extras = flight[22];
+  const carbon: CarbonEmission = {
+    emission: extras?.[7] ?? 0,
+    typical_on_route: extras?.[8] ?? 0,
+  };
+
+  return {
+    type: typ,
+    price,
+    airlines: airlineNames,
+    flights: sgFlights,
+    carbon,
+  };
+}
+
+/** Parse flight entries from a raw array, skipping malformed entries. */
+function parseFlightArray(raw: any[]): Flights[] {
+  const flights: Flights[] = [];
+  for (const k of raw) {
+    try {
+      const entry = parseFlightEntry(k);
+      if (entry) flights.push(entry);
+    } catch {
+      continue;
+    }
+  }
+  return flights;
+}
+
+/** Extract metadata (alliances, airlines) from payload. */
+function parseMetadata(payload: any[]): JsMetadata {
+  const metaRoot = payload[7];
+  let alliances: Alliance[] = [];
+  let airlines: Airline[] = [];
+
+  if (Array.isArray(metaRoot?.[1])) {
+    const [alliancesData, airlinesData] = metaRoot[1] as [
+      [string, string][] | undefined,
+      [string, string][] | undefined,
+    ];
+    if (Array.isArray(alliancesData)) {
+      alliances = alliancesData.map(([code, name]) => ({ code, name }));
+    }
+    if (Array.isArray(airlinesData)) {
+      airlines = airlinesData.map(([code, name]) => ({ code, name }));
+    }
+  }
+
+  return { alliances, airlines };
+}
+
 export function parse(html: string): FlightResults {
   // Find <script class="ds:1" ...> — there may be other attributes (e.g. nonce) before >
   const classMarker = 'class="ds:1"';
   const classIdx = html.indexOf(classMarker);
   if (classIdx === -1) {
-    // Detect common error pages
     if (html.includes("g-recaptcha") || html.includes('id="captcha"')) {
       throw new ParseError("Got a CAPTCHA page instead of flight results");
     }
@@ -54,93 +142,57 @@ export function parseJs(js: string): FlightResults {
     throw new ParseError(`Failed to parse flight data JSON: ${(e as Error).message}`);
   }
 
-  // Validate payload structure
+  return parsePayload(payload);
+}
+
+/** Parse the flight data payload array (shared by HTML and RPC paths). */
+export function parsePayload(payload: any[]): FlightResults {
   if (!Array.isArray(payload)) {
     throw new ParseError("Unexpected payload format: not an array");
   }
 
-  // Extract metadata with validation
-  const metaRoot = payload[7];
-  let alliances: Alliance[] = [];
-  let airlines: Airline[] = [];
-
-  if (Array.isArray(metaRoot?.[1])) {
-    const [alliancesData, airlinesData] = metaRoot[1] as [
-      [string, string][] | undefined,
-      [string, string][] | undefined,
-    ];
-    if (Array.isArray(alliancesData)) {
-      alliances = alliancesData.map(([code, name]) => ({ code, name }));
-    }
-    if (Array.isArray(airlinesData)) {
-      airlines = airlinesData.map(([code, name]) => ({ code, name }));
-    }
-  }
-
-  const metadata: JsMetadata = { alliances, airlines };
+  const metadata = parseMetadata(payload);
   const flights: Flights[] = [];
 
-  // No results
-  if (!Array.isArray(payload[3]?.[0])) {
-    return makeResults(flights, metadata);
+  // Best flights at [2][0]
+  if (Array.isArray(payload[2]?.[0])) {
+    flights.push(...parseFlightArray(payload[2][0]));
   }
 
-  for (const k of payload[3][0]) {
-    try {
-      const flight = k?.[0];
-      if (!flight) continue;
-
-      const price: number = k[1]?.[0]?.[1] ?? 0;
-      const typ: string = flight[0] ?? "";
-      const airlineNames: string[] = flight[1] ?? [];
-
-      const sgFlights: SingleFlight[] = [];
-
-      if (Array.isArray(flight[2])) {
-        for (const sf of flight[2]) {
-          if (!sf) continue;
-          const fromAirport: Airport = { code: sf[3] ?? "", name: sf[4] ?? "" };
-          const toAirport: Airport = { code: sf[6] ?? "", name: sf[5] ?? "" };
-          const depTime = sf[8];
-          const arrTime = sf[10];
-          const departure: SimpleDatetime = {
-            date: sf[20] ?? [0, 0, 0],
-            time: [depTime?.[0] ?? 0, depTime?.[1] ?? 0],
-          };
-          const arrival: SimpleDatetime = {
-            date: sf[21] ?? [0, 0, 0],
-            time: [arrTime?.[0] ?? 0, arrTime?.[1] ?? 0],
-          };
-
-          sgFlights.push({
-            from_airport: fromAirport,
-            to_airport: toAirport,
-            departure,
-            arrival,
-            duration: sf[11] ?? 0,
-            plane_type: sf[17] ?? "",
-          });
-        }
-      }
-
-      const extras = flight[22];
-      const carbon: CarbonEmission = {
-        emission: extras?.[7] ?? 0,
-        typical_on_route: extras?.[8] ?? 0,
-      };
-
-      flights.push({
-        type: typ,
-        price,
-        airlines: airlineNames,
-        flights: sgFlights,
-        carbon,
-      });
-    } catch {
-      // Skip malformed flight entries — don't crash the whole batch
-      continue;
-    }
+  // Other flights at [3][0]
+  if (Array.isArray(payload[3]?.[0])) {
+    flights.push(...parseFlightArray(payload[3][0]));
   }
 
   return makeResults(flights, metadata);
+}
+
+/** Parse an RPC response from GetShoppingResults. */
+export function parseRpcResponse(text: string): FlightResults {
+  // Strip )]}' security prefix
+  const stripped = text.replace(/^\)\]\}'?\s*/, "");
+  if (!stripped.trim()) {
+    throw new ParseError("Empty RPC response");
+  }
+
+  let outer: any;
+  try {
+    outer = JSON.parse(stripped);
+  } catch (e) {
+    throw new ParseError(`Failed to parse RPC response: ${(e as Error).message}`);
+  }
+
+  const innerJson = outer?.[0]?.[2];
+  if (typeof innerJson !== "string") {
+    throw new ParseError("RPC response missing flight data at [0][2]");
+  }
+
+  let payload: any[];
+  try {
+    payload = JSON.parse(innerJson);
+  } catch (e) {
+    throw new ParseError(`Failed to parse inner RPC data: ${(e as Error).message}`);
+  }
+
+  return parsePayload(payload);
 }
